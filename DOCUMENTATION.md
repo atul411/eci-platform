@@ -244,6 +244,18 @@ All services return errors in this format:
 }
 ```
 
+### 5.1 Swagger UI — Catalog Service
+
+![Swagger UI — Catalog Service](screenshots/swagger_catalog.png)
+
+### 5.2 Swagger UI — Order Service
+
+![Swagger UI — Order Service](screenshots/swagger_order.png)
+
+### 5.3 Swagger UI — Inventory Service
+
+![Swagger UI — Inventory Service](screenshots/swagger_inventory.png)
+
 ---
 
 ## 6. Monitoring & Observability
@@ -266,6 +278,18 @@ All services return errors in this format:
 
 Metrics are scraped at `GET /metrics` on each service (Prometheus text format).
 
+**Screenshot — Order Service Metrics (`/metrics`):**
+
+![Order Service Metrics](screenshots/metrics_order.png)
+
+**Screenshot — Inventory Service Metrics (`/metrics`):**
+
+![Inventory Service Metrics](screenshots/metrics_inventory.png)
+
+**Screenshot — Payment Service Metrics (`/metrics`):**
+
+![Payment Service Metrics](screenshots/metrics_payment.png)
+
 ### 6.2 Structured JSON Logging
 
 All services use `python-json-logger` for structured JSON logs:
@@ -282,6 +306,10 @@ All services use `python-json-logger` for structured JSON logs:
 **PII masking** is applied before logging:
 - Email: `at***@gmail.com`
 - Phone: `*******9012`
+
+**Screenshot — Structured JSON Logs (Order Service):**
+
+![Order Service Logs](screenshots/logs_order_service.png)
 
 ---
 
@@ -300,7 +328,15 @@ docker-compose ps
 docker-compose logs -f order-service
 ```
 
-### 7.2 Docker Compose Architecture
+### 7.2 Screenshot — `docker-compose up -d`
+
+![Docker Compose Up](screenshots/docker_compose_up.png)
+
+### 7.3 Screenshot — `docker ps` (All 6 Containers Running)
+
+![Docker PS](screenshots/docker_ps.png)
+
+### 7.4 Docker Compose Architecture
 
 Each service has:
 - Its own `Dockerfile` (Python 3.11-slim base)
@@ -324,7 +360,7 @@ order-service:
     - PAYMENT_SERVICE_URL=http://payment-service:8004
 ```
 
-### 7.3 Health Check Endpoints
+### 7.5 Health Check Endpoints
 
 ```bash
 curl http://localhost:8001/health  # {"status":"healthy","service":"catalog-service"}
@@ -334,6 +370,10 @@ curl http://localhost:8004/health  # {"status":"healthy","service":"payment-serv
 curl http://localhost:8005/health  # {"status":"healthy","service":"shipping-service"}
 curl http://localhost:8006/health  # {"status":"healthy","service":"notification-service"}
 ```
+
+**Screenshot — Health Check Responses:**
+
+![Health Checks](screenshots/docker_health_checks.png)
 
 ---
 
@@ -349,7 +389,7 @@ brew install minikube kubectl
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url>
+git clone https://github.com/atul411/eci-platform.git
 cd eci-platform
 
 # 2. Copy seed CSVs into Minikube VM
@@ -362,7 +402,11 @@ done
 bash k8s/deploy.sh
 ```
 
-### 8.3 Kubernetes Manifest Structure
+### 8.3 Screenshot — Minikube Start
+
+![Minikube Start](screenshots/minikube_start.png)
+
+### 8.4 Kubernetes Manifest Structure
 
 Each service has the following K8s resources:
 
@@ -370,12 +414,13 @@ Each service has the following K8s resources:
 |---|---|
 | `Namespace: eci` | Isolated namespace for all services |
 | `ConfigMap: eci-config` | Shared environment variables (service URLs) |
+| `Secret: eci-secrets` | Sensitive configuration keys |
 | `Deployment` | Pod spec with readiness/liveness probes and resource limits |
 | `PersistentVolumeClaim` | SQLite DB storage (1Gi per service) |
 | `Service (ClusterIP)` | Internal service discovery |
 | `Service (NodePort)` | External access on ports 30001–30006 |
 
-### 8.4 Resource Limits (per pod)
+### 8.5 Resource Limits (per pod)
 
 ```yaml
 resources:
@@ -387,7 +432,15 @@ resources:
     memory: "512Mi"
 ```
 
-### 8.5 Accessing Services on Minikube
+### 8.6 Screenshot — `kubectl get pods -n eci` (All Pods Running)
+
+![kubectl get pods](screenshots/k8s_get_pods.png)
+
+### 8.7 Screenshot — `kubectl get svc -n eci`
+
+![kubectl get svc](screenshots/k8s_get_svc.png)
+
+### 8.8 Accessing Services on Minikube
 
 ```bash
 # Port-forward all services to localhost
@@ -397,24 +450,6 @@ kubectl port-forward -n eci svc/order-service        8003:8003 &
 kubectl port-forward -n eci svc/payment-service      8004:8004 &
 kubectl port-forward -n eci svc/shipping-service     8005:8005 &
 kubectl port-forward -n eci svc/notification-service 8006:8006 &
-```
-
-### 8.6 Verify Deployment
-
-```bash
-kubectl get pods -n eci
-kubectl get svc -n eci
-```
-
-Expected output:
-```
-NAME                                   READY   STATUS    RESTARTS   AGE
-catalog-service-xxx                    1/1     Running   0          5m
-inventory-service-xxx                  1/1     Running   0          5m
-notification-service-xxx               1/1     Running   0          5m
-order-service-xxx                      1/1     Running   0          5m
-payment-service-xxx                    1/1     Running   0          5m
-shipping-service-xxx                   1/1     Running   0          5m
 ```
 
 ---
@@ -428,10 +463,35 @@ shipping-service-xxx                   1/1     Running   0          5m
 bash demo.sh
 ```
 
-### 9.2 Manual Place Order Example
+**Screenshot — demo.sh Output:**
+
+![Demo Script Output](screenshots/demo_sh_output.png)
+
+### 9.2 CRUD — Create Product (Catalog Service)
 
 ```bash
-# Place an order
+curl -X POST http://localhost:8001/v1/products \
+  -H "Content-Type: application/json" \
+  -d '{"sku":"SKU-TEST","name":"Test Product","category":"Electronics","price":999.00}'
+```
+
+**Screenshot — Create Product Response:**
+
+![Create Product](screenshots/crud_create_product.png)
+
+### 9.3 CRUD — List Products
+
+```bash
+curl http://localhost:8001/v1/products?page=1&size=5
+```
+
+**Screenshot — List Products Response:**
+
+![List Products](screenshots/crud_list_products.png)
+
+### 9.4 Place Order (Reserve → Pay → Ship → Notify)
+
+```bash
 curl -X POST http://localhost:8003/v1/orders \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: my-unique-key-001" \
@@ -443,24 +503,43 @@ curl -X POST http://localhost:8003/v1/orders \
       {"sku": "SKU2", "quantity": 2}
     ]
   }'
-
-# Response: order_id=401, status=CONFIRMED, total=3775.96
 ```
 
-### 9.3 Cancel Order
+**Screenshot — Place Order Response (CONFIRMED):**
+
+![Place Order Response](screenshots/place_order_response.png)
+
+### 9.5 Cancel Order
 
 ```bash
 curl -X POST http://localhost:8003/v1/orders/401/cancel
-# Response: {"message":"Order cancelled","order_id":401,"payment_status":"REFUNDED"}
 ```
 
-### 9.4 Check Metrics
+**Screenshot — Cancel Order Response (REFUNDED):**
+
+![Cancel Order Response](screenshots/cancel_order_response.png)
+
+### 9.6 Check Metrics
 
 ```bash
 curl http://localhost:8003/metrics | grep orders_
 curl http://localhost:8004/metrics | grep payments_
 curl http://localhost:8002/metrics | grep inventory_
 ```
+
+**Screenshot — Metrics Output:**
+
+![Metrics Output](screenshots/metrics_output.png)
+
+### 9.7 Inventory Movements Audit Log
+
+```bash
+curl http://localhost:8002/v1/inventory/movements
+```
+
+**Screenshot — Inventory Movements:**
+
+![Inventory Movements](screenshots/inventory_movements.png)
 
 ---
 
