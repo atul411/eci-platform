@@ -1,0 +1,549 @@
+{
+  "info": {
+    "name": "ECI Platform — E-Commerce with Inventory",
+    "_postman_id": "eci-platform-bits-pilani-s2-2026",
+    "description": "Complete API collection for ECI Platform microservices.\nBITS Pilani | Scalable Services SEZG583 | Group 24\n\nBase URLs:\n- Catalog:      http://localhost:8001\n- Inventory:    http://localhost:8002\n- Order:        http://localhost:8003\n- Payment:      http://localhost:8004\n- Shipping:     http://localhost:8005\n- Notification: http://localhost:8006",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "catalog_url",      "value": "http://localhost:8001" },
+    { "key": "inventory_url",    "value": "http://localhost:8002" },
+    { "key": "order_url",        "value": "http://localhost:8003" },
+    { "key": "payment_url",      "value": "http://localhost:8004" },
+    { "key": "shipping_url",     "value": "http://localhost:8005" },
+    { "key": "notification_url", "value": "http://localhost:8006" },
+    { "key": "order_id",         "value": "1" },
+    { "key": "product_id",       "value": "1" },
+    { "key": "payment_id",       "value": "1" },
+    { "key": "shipment_id",      "value": "1" }
+  ],
+  "item": [
+
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "Catalog — Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{catalog_url}}/health", "host": ["{{catalog_url}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Inventory — Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{inventory_url}}/health", "host": ["{{inventory_url}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Order — Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{order_url}}/health", "host": ["{{order_url}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Payment — Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{payment_url}}/health", "host": ["{{payment_url}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Shipping — Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{shipping_url}}/health", "host": ["{{shipping_url}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Notification — Health",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{notification_url}}/health", "host": ["{{notification_url}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Catalog Service",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{catalog_url}}/v1/products?page=1&size=10",
+              "host": ["{{catalog_url}}"],
+              "path": ["v1", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "min_price", "value": "", "disabled": true },
+                { "key": "max_price", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"DEMO-001\",\n  \"name\": \"Demo Laptop\",\n  \"category\": \"Electronics\",\n  \"price\": 45999.00,\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{catalog_url}}/v1/products", "host": ["{{catalog_url}}"], "path": ["v1", "products"] }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{catalog_url}}/v1/products/{{product_id}}", "host": ["{{catalog_url}}"], "path": ["v1", "products", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Get Product by SKU",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{catalog_url}}/v1/products/sku/SKU1", "host": ["{{catalog_url}}"], "path": ["v1", "products", "sku", "SKU1"] }
+          }
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Laptop Pro\",\n  \"price\": 49999.00,\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{catalog_url}}/v1/products/{{product_id}}", "host": ["{{catalog_url}}"], "path": ["v1", "products", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Deactivate Product",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{catalog_url}}/v1/products/{{product_id}}", "host": ["{{catalog_url}}"], "path": ["v1", "products", "{{product_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Inventory Service",
+      "item": [
+        {
+          "name": "List Inventory",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{inventory_url}}/v1/inventory?page=1&size=10",
+              "host": ["{{inventory_url}}"],
+              "path": ["v1", "inventory"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "product_id", "value": "", "disabled": true },
+                { "key": "warehouse", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Stock by Product",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{inventory_url}}/v1/inventory/product/{{product_id}}", "host": ["{{inventory_url}}"], "path": ["v1", "inventory", "product", "{{product_id}}"] }
+          }
+        },
+        {
+          "name": "Reserve Inventory",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"res-demo-001\",\n  \"order_id\": 9999,\n  \"items\": [\n    { \"product_id\": 1, \"sku\": \"SKU1\", \"quantity\": 2 }\n  ],\n  \"allow_backorder\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{inventory_url}}/v1/inventory/reserve", "host": ["{{inventory_url}}"], "path": ["v1", "inventory", "reserve"] }
+          }
+        },
+        {
+          "name": "Release Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservation_id\": \"res-demo-001\",\n  \"order_id\": 9999\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{inventory_url}}/v1/inventory/release", "host": ["{{inventory_url}}"], "path": ["v1", "inventory", "release"] }
+          }
+        },
+        {
+          "name": "Ship Order (Inventory)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{inventory_url}}/v1/inventory/ship", "host": ["{{inventory_url}}"], "path": ["v1", "inventory", "ship"] }
+          }
+        },
+        {
+          "name": "Restock Inventory",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"warehouse\": \"WH-Mumbai\",\n  \"quantity\": 50\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{inventory_url}}/v1/inventory/restock", "host": ["{{inventory_url}}"], "path": ["v1", "inventory", "restock"] }
+          }
+        },
+        {
+          "name": "List Inventory Movements",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{inventory_url}}/v1/inventory/movements?page=1&size=10",
+              "host": ["{{inventory_url}}"],
+              "path": ["v1", "inventory", "movements"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "product_id", "value": "", "disabled": true },
+                { "key": "order_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "List Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{order_url}}/v1/orders?page=1&size=10",
+              "host": ["{{order_url}}"],
+              "path": ["v1", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "customer_id", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Place Order (COD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "demo-order-cod-001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": 1,\n  \"payment_method\": \"COD\",\n  \"items\": [\n    { \"sku\": \"SKU1\", \"quantity\": 1 },\n    { \"sku\": \"SKU2\", \"quantity\": 1 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{order_url}}/v1/orders", "host": ["{{order_url}}"], "path": ["v1", "orders"] }
+          }
+        },
+        {
+          "name": "Place Order (CARD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "demo-order-card-001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_id\": 2,\n  \"payment_method\": \"CARD\",\n  \"items\": [\n    { \"sku\": \"SKU3\", \"quantity\": 2 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{order_url}}/v1/orders", "host": ["{{order_url}}"], "path": ["v1", "orders"] }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{order_url}}/v1/orders/{{order_id}}", "host": ["{{order_url}}"], "path": ["v1", "orders", "{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{order_url}}/v1/orders/{{order_id}}/cancel", "host": ["{{order_url}}"], "path": ["v1", "orders", "{{order_id}}", "cancel"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Payment Service",
+      "item": [
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{payment_url}}/v1/payments?page=1&size=10",
+              "host": ["{{payment_url}}"],
+              "path": ["v1", "payments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Charge Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1,\n  \"amount\": 5250.00,\n  \"method\": \"CARD\",\n  \"idempotency_key\": \"pay-demo-001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{payment_url}}/v1/payments/charge", "host": ["{{payment_url}}"], "path": ["v1", "payments", "charge"] }
+          }
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{payment_url}}/v1/payments/{{payment_id}}", "host": ["{{payment_url}}"], "path": ["v1", "payments", "{{payment_id}}"] }
+          }
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer requested cancellation\",\n  \"idempotency_key\": \"refund-demo-001\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{payment_url}}/v1/payments/{{payment_id}}/refund", "host": ["{{payment_url}}"], "path": ["v1", "payments", "{{payment_id}}", "refund"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Shipping Service",
+      "item": [
+        {
+          "name": "List Shipments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{shipping_url}}/v1/shipments?page=1&size=10",
+              "host": ["{{shipping_url}}"],
+              "path": ["v1", "shipments"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" },
+                { "key": "order_id", "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Shipment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": 1,\n  \"carrier\": \"BlueDart\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{shipping_url}}/v1/shipments", "host": ["{{shipping_url}}"], "path": ["v1", "shipments"] }
+          }
+        },
+        {
+          "name": "Get Shipment by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{shipping_url}}/v1/shipments/{{shipment_id}}", "host": ["{{shipping_url}}"], "path": ["v1", "shipments", "{{shipment_id}}"] }
+          }
+        },
+        {
+          "name": "Update Shipment Status — PACKED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PACKED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{shipping_url}}/v1/shipments/{{shipment_id}}/status", "host": ["{{shipping_url}}"], "path": ["v1", "shipments", "{{shipment_id}}", "status"] }
+          }
+        },
+        {
+          "name": "Update Shipment Status — SHIPPED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SHIPPED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{shipping_url}}/v1/shipments/{{shipment_id}}/status", "host": ["{{shipping_url}}"], "path": ["v1", "shipments", "{{shipment_id}}", "status"] }
+          }
+        },
+        {
+          "name": "Update Shipment Status — DELIVERED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{shipping_url}}/v1/shipments/{{shipment_id}}/status", "host": ["{{shipping_url}}"], "path": ["v1", "shipments", "{{shipment_id}}", "status"] }
+          }
+        },
+        {
+          "name": "Update Shipment Status — CANCELLED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{shipping_url}}/v1/shipments/{{shipment_id}}/status", "host": ["{{shipping_url}}"], "path": ["v1", "shipments", "{{shipment_id}}", "status"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Notification Service",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{notification_url}}/v1/notifications?page=1&size=10",
+              "host": ["{{notification_url}}"],
+              "path": ["v1", "notifications"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notification_type\": \"ORDER_CONFIRMED\",\n  \"channel\": \"EMAIL\",\n  \"recipient_id\": 1,\n  \"recipient_contact\": \"customer@example.com\",\n  \"message\": \"Your order has been confirmed.\",\n  \"reference_id\": \"order-1\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{notification_url}}/v1/notifications", "host": ["{{notification_url}}"], "path": ["v1", "notifications"] }
+          }
+        },
+        {
+          "name": "Get Notification by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{notification_url}}/v1/notifications/1", "host": ["{{notification_url}}"], "path": ["v1", "notifications", "1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "Order Service Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{order_url}}/metrics", "host": ["{{order_url}}"], "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "Inventory Service Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{inventory_url}}/metrics", "host": ["{{inventory_url}}"], "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "Payment Service Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{payment_url}}/metrics", "host": ["{{payment_url}}"], "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "Catalog Service Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{catalog_url}}/metrics", "host": ["{{catalog_url}}"], "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "Shipping Service Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{shipping_url}}/metrics", "host": ["{{shipping_url}}"], "path": ["metrics"] }
+          }
+        },
+        {
+          "name": "Notification Service Metrics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{notification_url}}/metrics", "host": ["{{notification_url}}"], "path": ["metrics"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}
