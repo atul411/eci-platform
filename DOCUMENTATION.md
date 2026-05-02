@@ -1,7 +1,7 @@
 # ECI Platform — E-Commerce with Inventory
 ## Microservices-Based Application
 ### BITS Pilani — Scalable Services (S2-25_SEZG583)
-### Problem Statement 4 | Semester 2, 2025
+### Problem Statement 4 | Semester 2, 2026
 
 ---
 
