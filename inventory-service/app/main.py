@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -7,19 +8,36 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-from pythonjsonlogger import jsonlogger
 
 from app.database import Base, SessionLocal, engine
 from app.routers import inventory
 from app.services.reaper import reaper_job
 import app.services.inventory_service as svc
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-_handler = logging.StreamHandler()
-_handler.setFormatter(jsonlogger.JsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
-for name in ("inventory", "inventory.reaper"):
-    logging.getLogger(name).addHandler(_handler)
-    logging.getLogger(name).setLevel(logging.INFO)
+_LOG_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}
+    },
+    "handlers": {
+        "stderr": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "formatter": "default",
+            "level": "DEBUG",
+        }
+    },
+    "root": {"handlers": ["stderr"], "level": "INFO"},
+    "loggers": {
+        "inventory": {"handlers": ["stderr"], "level": "INFO", "propagate": False},
+        "inventory.reaper": {"handlers": ["stderr"], "level": "INFO", "propagate": False},
+        "uvicorn.access": {"level": "WARNING"},
+        "sqlalchemy.engine": {"level": "WARNING"},
+    },
+}
+
+logging.config.dictConfig(_LOG_CONFIG)
 
 
 @asynccontextmanager

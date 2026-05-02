@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -6,23 +7,41 @@ from datetime import datetime
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-from pythonjsonlogger import jsonlogger
 
 from app.database import Base, SessionLocal, engine
 from app.routers import shipments
 import app.services.shipping_service as svc
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-_handler = logging.StreamHandler()
-_handler.setFormatter(jsonlogger.JsonFormatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
-logging.getLogger("shipping").addHandler(_handler)
-logging.getLogger("shipping").setLevel(logging.INFO)
+_LOG_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}
+    },
+    "handlers": {
+        "stderr": {
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+            "formatter": "default",
+            "level": "DEBUG",
+        }
+    },
+    "root": {"handlers": ["stderr"], "level": "INFO"},
+    "loggers": {
+        "shipping": {"handlers": ["stderr"], "level": "INFO", "propagate": False},
+        "uvicorn.access": {"level": "WARNING"},
+        "sqlalchemy.engine": {"level": "WARNING"},
+    },
+}
+
+logging.config.dictConfig(_LOG_CONFIG)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     Base.metadata.create_all(bind=engine)
     svc.seed(SessionLocal)
+
     yield
 
 

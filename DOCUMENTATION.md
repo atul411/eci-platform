@@ -562,30 +562,24 @@ Available at `/docs` on each running service:
 
 ### 10.2 Static OpenAPI Spec Files (Repository)
 
-Exported JSON spec files are committed to the repository under `openapi-specs/` and can be imported directly into Postman, Insomnia, or any API tool:
+Exported JSON spec files are committed to the monorepo under `openapi-specs/` and can be imported directly into Postman, Insomnia, or any API tool:
 
 | Service | Spec File |
 |---|---|
-| Catalog | [catalog-service.json](https://github.com/atul411/catalog-service/blob/master/openapi-specs/catalog-service.json) |
-| Inventory | [inventory-service.json](https://github.com/atul411/inventory-service/blob/master/openapi-specs/inventory-service.json) |
-| Order | [order-service.json](https://github.com/atul411/order-service/blob/master/openapi-specs/order-service.json) |
-| Payment | [payment-service.json](https://github.com/atul411/payment-service/blob/master/openapi-specs/payment-service.json) |
-| Shipping | [shipping-service.json](https://github.com/atul411/shipping-service/blob/master/openapi-specs/shipping-service.json) |
-| Notification | [notification-service.json](https://github.com/atul411/notification-service/blob/master/openapi-specs/notification-service.json) |
+| Catalog | [catalog-service.json](https://github.com/atul411/eci-platform/blob/master/openapi-specs/catalog-service.json) |
+| Inventory | [inventory-service.json](https://github.com/atul411/eci-platform/blob/master/openapi-specs/inventory-service.json) |
+| Order | [order-service.json](https://github.com/atul411/eci-platform/blob/master/openapi-specs/order-service.json) |
+| Payment | [payment-service.json](https://github.com/atul411/eci-platform/blob/master/openapi-specs/payment-service.json) |
+| Shipping | [shipping-service.json](https://github.com/atul411/eci-platform/blob/master/openapi-specs/shipping-service.json) |
+| Notification | [notification-service.json](https://github.com/atul411/eci-platform/blob/master/openapi-specs/notification-service.json) |
 
 ---
 
-## 11. GitHub Repository Links
+## 11. GitHub Repository
 
-| Service | Repository |
+| Repository | URL |
 |---|---|
-| All Services (Monorepo) | https://github.com/atul411/eci-platform |
-| Catalog Service | https://github.com/atul411/catalog-service |
-| Inventory Service | https://github.com/atul411/inventory-service |
-| Order Service | https://github.com/atul411/order-service |
-| Payment Service | https://github.com/atul411/payment-service |
-| Shipping Service | https://github.com/atul411/shipping-service |
-| Notification Service | https://github.com/atul411/notification-service |
+| ECI Platform (All Services) | https://github.com/atul411/eci-platform |
 
 ---
 
