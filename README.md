@@ -17,7 +17,20 @@ Microservices-based e-commerce platform with multi-warehouse inventory managemen
 
 ---
 
-## Services
+## Repositories
+
+Each service has its own repository:
+
+| Service | Repository |
+|---|---|
+| Catalog Service | https://github.com/atul411/catalog-service |
+| Inventory Service | https://github.com/atul411/inventory-service |
+| Order Service | https://github.com/atul411/order-service |
+| Payment Service | https://github.com/atul411/payment-service |
+| Shipping Service | https://github.com/atul411/shipping-service |
+| Notification Service | https://github.com/atul411/notification-service |
+
+This monorepo contains the full platform for running all services together via Docker Compose and Kubernetes.
 
 | Service | Port | Responsibility |
 |---|---|---|
