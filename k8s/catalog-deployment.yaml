@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: catalog-pvc
+  namespace: eci
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: eci
+  labels:
+    app: catalog-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      containers:
+        - name: catalog-service
+          image: catalog-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8001
+          env:
+            - name: PORT
+              value: "8001"
+            - name: DATABASE_URL
+              value: "sqlite:////db/catalog.db"
+            - name: PRODUCTS_CSV
+              value: "/data/eci_products_indian.csv"
+          envFrom:
+            - secretRef:
+                name: eci-secrets
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          volumeMounts:
+            - name: db-storage
+              mountPath: /db
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: catalog-pvc
+        - name: data-volume
+          hostPath:
+            path: /eci-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+  namespace: eci
+spec:
+  selector:
+    app: catalog-service
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service-external
+  namespace: eci
+spec:
+  selector:
+    app: catalog-service
+  ports:
+    - protocol: TCP
+      port: 8001
+      targetPort: 8001
+      nodePort: 30001
+  type: NodePort

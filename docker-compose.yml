@@ -1,0 +1,174 @@
+version: "3.9"
+
+networks:
+  eci-net:
+    driver: bridge
+
+volumes:
+  catalog-data:
+  inventory-data:
+  order-data:
+  payment-data:
+  shipping-data:
+  notification-data:
+
+services:
+
+  # ── Catalog Service ──────────────────────────────────────────────────────────
+  catalog-service:
+    build: ./catalog-service
+    container_name: catalog-service
+    environment:
+      PORT: "8001"
+      DATABASE_URL: "sqlite:////db/catalog.db"
+      PRODUCTS_CSV: "/data/eci_products_indian.csv"
+    volumes:
+      - catalog-data:/db
+      - ./data:/data:ro
+    ports:
+      - "8001:8001"
+    networks:
+      - eci-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Inventory Service ────────────────────────────────────────────────────────
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory-service
+    environment:
+      PORT: "8002"
+      DATABASE_URL: "sqlite:////db/inventory.db"
+      INVENTORY_CSV: "/data/eci_inventory_indian.csv"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:8006"
+      LOW_STOCK_THRESHOLD: "10"
+      RESERVATION_TTL_MINUTES: "15"
+    volumes:
+      - inventory-data:/db
+      - ./data:/data:ro
+    ports:
+      - "8002:8002"
+    networks:
+      - eci-net
+    depends_on:
+      notification-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Order Service ────────────────────────────────────────────────────────────
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    environment:
+      PORT: "8003"
+      DATABASE_URL: "sqlite:////db/order.db"
+      ORDERS_CSV: "/data/eci_orders_indian.csv"
+      ORDER_ITEMS_CSV: "/data/eci_order_items_indian.csv"
+      CATALOG_SERVICE_URL: "http://catalog-service:8001"
+      INVENTORY_SERVICE_URL: "http://inventory-service:8002"
+      PAYMENT_SERVICE_URL: "http://payment-service:8004"
+      SHIPPING_SERVICE_URL: "http://shipping-service:8005"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:8006"
+    volumes:
+      - order-data:/db
+      - ./data:/data:ro
+    ports:
+      - "8003:8003"
+    networks:
+      - eci-net
+    depends_on:
+      catalog-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      shipping-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ── Payment Service ──────────────────────────────────────────────────────────
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    environment:
+      PORT: "8004"
+      DATABASE_URL: "sqlite:////db/payment.db"
+      PAYMENTS_CSV: "/data/eci_payments_indian.csv"
+    volumes:
+      - payment-data:/db
+      - ./data:/data:ro
+    ports:
+      - "8004:8004"
+    networks:
+      - eci-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8004/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Shipping Service ─────────────────────────────────────────────────────────
+  shipping-service:
+    build: ./shipping-service
+    container_name: shipping-service
+    environment:
+      PORT: "8005"
+      DATABASE_URL: "sqlite:////db/shipping.db"
+      SHIPMENTS_CSV: "/data/eci_shipments_indian.csv"
+    volumes:
+      - shipping-data:/db
+      - ./data:/data:ro
+    ports:
+      - "8005:8005"
+    networks:
+      - eci-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8005/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Notification Service ─────────────────────────────────────────────────────
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    environment:
+      PORT: "8006"
+      DATABASE_URL: "sqlite:////db/notification.db"
+    volumes:
+      - notification-data:/db
+    ports:
+      - "8006:8006"
+    networks:
+      - eci-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8006/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s

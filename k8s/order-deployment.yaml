@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: order-pvc
+  namespace: eci
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: eci
+  labels:
+    app: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: order-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8003
+          env:
+            - name: PORT
+              value: "8003"
+            - name: DATABASE_URL
+              value: "sqlite:////db/order.db"
+            - name: ORDERS_CSV
+              value: "/data/eci_orders_indian.csv"
+            - name: ORDER_ITEMS_CSV
+              value: "/data/eci_order_items_indian.csv"
+            - name: CATALOG_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: CATALOG_SERVICE_URL
+            - name: INVENTORY_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: INVENTORY_SERVICE_URL
+            - name: PAYMENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: PAYMENT_SERVICE_URL
+            - name: SHIPPING_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: SHIPPING_SERVICE_URL
+            - name: NOTIFICATION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: NOTIFICATION_SERVICE_URL
+          envFrom:
+            - secretRef:
+                name: eci-secrets
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 25
+            periodSeconds: 30
+          volumeMounts:
+            - name: db-storage
+              mountPath: /db
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: order-pvc
+        - name: data-volume
+          hostPath:
+            path: /eci-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: eci
+spec:
+  selector:
+    app: order-service
+  ports:
+    - protocol: TCP
+      port: 8003
+      targetPort: 8003
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service-external
+  namespace: eci
+spec:
+  selector:
+    app: order-service
+  ports:
+    - protocol: TCP
+      port: 8003
+      targetPort: 8003
+      nodePort: 30003
+  type: NodePort

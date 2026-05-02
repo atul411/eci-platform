@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: inventory-pvc
+  namespace: eci
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: eci
+  labels:
+    app: inventory-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+        - name: inventory-service
+          image: inventory-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8002
+          env:
+            - name: PORT
+              value: "8002"
+            - name: DATABASE_URL
+              value: "sqlite:////db/inventory.db"
+            - name: INVENTORY_CSV
+              value: "/data/eci_inventory_indian.csv"
+            - name: NOTIFICATION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: NOTIFICATION_SERVICE_URL
+            - name: LOW_STOCK_THRESHOLD
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: LOW_STOCK_THRESHOLD
+            - name: RESERVATION_TTL_MINUTES
+              valueFrom:
+                configMapKeyRef:
+                  name: eci-config
+                  key: RESERVATION_TTL_MINUTES
+          envFrom:
+            - secretRef:
+                name: eci-secrets
+
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          volumeMounts:
+            - name: db-storage
+              mountPath: /db
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: inventory-pvc
+        - name: data-volume
+          hostPath:
+            path: /eci-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: eci
+spec:
+  selector:
+    app: inventory-service
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service-external
+  namespace: eci
+spec:
+  selector:
+    app: inventory-service
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: 8002
+      nodePort: 30002
+  type: NodePort

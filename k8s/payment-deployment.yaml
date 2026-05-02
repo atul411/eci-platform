@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: payment-pvc
+  namespace: eci
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: eci
+  labels:
+    app: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: payment-service:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8004
+          env:
+            - name: PORT
+              value: "8004"
+            - name: DATABASE_URL
+              value: "sqlite:////db/payment.db"
+            - name: PAYMENTS_CSV
+              value: "/data/eci_payments_indian.csv"
+          envFrom:
+            - secretRef:
+                name: eci-secrets
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          volumeMounts:
+            - name: db-storage
+              mountPath: /db
+            - name: data-volume
+              mountPath: /data
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: payment-pvc
+        - name: data-volume
+          hostPath:
+            path: /eci-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: eci
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - protocol: TCP
+      port: 8004
+      targetPort: 8004
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service-external
+  namespace: eci
+spec:
+  selector:
+    app: payment-service
+  ports:
+    - protocol: TCP
+      port: 8004
+      targetPort: 8004
+      nodePort: 30004
+  type: NodePort
